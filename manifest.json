@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmarks Popup",
+  "version": "1.0",
+  "description": "Displays bookmarks as a popup with icons.",
+  "permissions": ["bookmarks"],
+  "action": {
+    "default_popup": "popup/popup.html"
+  }
+}
