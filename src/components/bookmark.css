@@ -1,0 +1,41 @@
+
+.bookmark {
+    width: 100px;
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    position: relative;
+    filter: drop-shadow(0 0 1px black);
+}
+
+.bookmark img {
+    width: 48px;
+    height: 48px;
+    display: block;
+    margin: 0 auto 5px auto;
+}
+
+.bookmark-title {
+    display: block;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: small;
+    letter-spacing: 1px;
+    color: white;
+    margin-top: 1rem;
+}
+
+.more{
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    justify-content: flex-end;
+    padding: 3px;
+}
+
+span{
+    padding: 0;
+}

@@ -1,0 +1,30 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 10px;
+    width: 300px;
+  }
+  
+  #site-preview-container {
+    text-align: center;
+  }
+  
+  #preview-content img {
+    display: block;
+    margin: 0 auto 10px auto;
+  }
+  
+  h1 {
+    font-size: 18px;
+  }
+  
+  h2 {
+    font-size: 16px;
+    margin: 10px 0;
+  }
+  
+  p {
+    font-size: 12px;
+    color: #555;
+  }
+  
