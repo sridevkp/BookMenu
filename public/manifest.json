@@ -4,15 +4,7 @@
   "version": "1.0",
   "description": "Bookmarks as Apps: Easily accesss favourite sites on new tab",
 
-  "permissions": ["bookmarks","favicon","contextMenus"],
-
-  "action": {
-    "default_popup": "src/popup.html"
-  },
-
-  "background": {
-    "service_worker": "background.js"
-  },
+  "permissions": ["bookmarks","favicon"],
 
   "chrome_url_overrides": {
     "newtab": "src/newtab.html"

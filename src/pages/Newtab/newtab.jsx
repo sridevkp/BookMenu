@@ -25,19 +25,21 @@ import './newtab.css';
 const Newtab = () => {
     const [nodes, setNodes] = useState(new Set());
     const [results, setResuts] = useState(new Set());
-    const [searching, setSearching] = useState(false);
+    const [searching, setSearching] = useState(null);
     const [selecting, setSelecting] = useState(false);
     const [selected, setSelected] = useState(new Set());
     const [openMenu, setOpenMenu] = useState();
     const [openConfirm, setOpenConfirm] = useState();
+    const [browserClass, setBrowserClass] = useState('');
 
     const anchorRef = useRef();
 
     useEffect( () => {
-      const nav = document.querySelector('nav');
-      navigator.brave && nav.classList.add('brave-nav');
-      
-    
+      const detectBrowser = async () => {
+        if (navigator.brave && (await navigator.brave.isBrave())) {
+            setBrowserClass('brave-nav');
+        }
+      };
 
       chrome.bookmarks.getTree((bookmarkTreeNodes) => {
         if (bookmarkTreeNodes.length) {
@@ -54,7 +56,13 @@ const Newtab = () => {
           }
         }
       }
+
+      detectBrowser();
     }, [])
+
+    useEffect( () => {
+      setResuts(new Set(Array.from(nodes).filter(node => node.url.toLowerCase().includes(searching) || node.title.toLowerCase().includes(searching))));
+    }, [searching])
 
     const select = node => setSelected( prev => prev.add(node) );
     
@@ -71,8 +79,7 @@ const Newtab = () => {
     const handleInput = searchTerm => {
       searchTerm = searchTerm.toLowerCase().trim();
       setSearching(searchTerm);
-      setResuts(new Set(Array.from(nodes).filter(node => node.url.toLowerCase().includes(searchTerm) || node.title.toLowerCase().includes(searchTerm))));
-}
+  }
   
     const handleDelete = () => selected.size ? setOpenConfirm(true) : setOpenMenu(false) ;
 
@@ -88,7 +95,10 @@ const Newtab = () => {
           })
         });
       });
+      
+      setSearching(searching);
       setSelected( new Set() );
+      setOpenMenu(false)
     };
     
   return (
@@ -113,7 +123,7 @@ const Newtab = () => {
         <span></span>
       </div>
       <header>
-        <nav>
+        <nav className={browserClass}>
 
           <div className="img-logo">
             <img src="/icons/icon128.png" width="32" height="32" alt="logo" />
