@@ -28,18 +28,11 @@ const Newtab = () => {
     const [selected, setSelected] = useState(new Set());
     const [openMenu, setOpenMenu] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
-    const [browserClass, setBrowserClass] = useState('');
 
     const anchorRef = useRef();
     const fuseRef = useRef();
 
     useEffect(() => {
-      const detectBrowser = async () => {
-        if (navigator.brave && (await navigator.brave.isBrave())) {
-            setBrowserClass('brave-nav');
-        }
-      };
-
       chrome.bookmarks.getTree(
         (bookmarkTreeNodes) => addBookmarks(bookmarkTreeNodes)
       );
@@ -54,8 +47,6 @@ const Newtab = () => {
           }
         }
       }
-
-      detectBrowser();
     }, [])
 
     useEffect(() => {
@@ -68,17 +59,7 @@ const Newtab = () => {
           'title',
         ]
       })
-    },[bookmarks])
-
-    useEffect(() => {
-      if (searching) {
-        const result = fuseRef.current.search(searching);
-        setResults(result);
-      } else {
-        setResults([]);
-      }
-    }, [searching]);
-    
+    },[bookmarks]);    
 
     const select = bookmark => setSelected( prev => prev.add(bookmark) );
     
@@ -92,27 +73,37 @@ const Newtab = () => {
 
     const handleInput = searchTerm => {
       searchTerm = searchTerm.toLowerCase().trim();
-      setSearching(searchTerm);
+      const result = fuseRef.current.search(searchTerm);
+      if( searchTerm ){
+        setSearching(searchTerm);
+        setResults(result);
+      }else{
+        setSearching("");
+      }
     }
   
     const handleDelete = () => selected.size ? setOpenConfirm(true) : setOpenMenu(false) ;
 
     const deleteBookmarks = async () => {
       setOpenConfirm(false);
-      let filteredNodes = nodes
-      selected.forEach( bookmark => {
-        console.log(bookmark.id);
-
-        chrome.bookmarks.remove(bookmark.id, function() {
-          filteredNodes = filteredNodes.filter((b) => b.id !== bookmark.id);
-        });
-      });
+    
+      const idsToDelete = Array.from(selected).map(bookmark => bookmark.id);
+    
+      await Promise.all(
+        idsToDelete.map(id => 
+          new Promise(resolve => chrome.bookmarks.remove(id, resolve))
+        )
+      );
+    
+      setNodes(prevNodes => prevNodes.filter(node => !idsToDelete.includes(node.id)));
+      setSelected(new Set());
+      setOpenMenu(false);
+    
+      handleInput(searching);
       
-      setNodes([...filteredNodes])
-      setSearching(searching);
-      setSelected( new Set() );
-      setOpenMenu(false)
     };
+    
+    
     
   return (
     <>
@@ -137,17 +128,17 @@ const Newtab = () => {
       </div>
 
       <header>
-        <nav className={browserClass}>
+        <nav>
           <div className="img-logo">
             <img src="/icons/icon128.png" width="32" height="32" alt="logo" />
           </div>
 
           <div className="search">
             <div className="search-box">
-              <Button className="btn">
+              <Button className="btn" onClick={() => document.getElementById('search').focus()}>
                 <SearchIcon width={24} height={24}/>
               </Button>
-              <input type="text" className="input-search" id="search" placeholder="Type to Search..." onInput={ e => handleInput(e.target.value)}/>
+              <input autoFocus type="text" className="input-search" id="search" placeholder="Type to Search..." value={searching} onInput={ e => handleInput(e.target.value)}/>
             </div>
           </div>
 
@@ -188,7 +179,7 @@ const Newtab = () => {
         </nav>
       </header>
 
-      <main className='img-bg'>
+      <main>
         <div className="title">{searching?"Search results":"All Bookmarks"}</div>
         
         <div className="container blueglass">
