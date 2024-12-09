@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import NewTab from './pages/Newtab/newtab';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';

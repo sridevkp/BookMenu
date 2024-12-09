@@ -6,7 +6,7 @@ import Checkbox from '@mui/material/Checkbox';
 
 import './bookmark.css';
 
-const Bookmark = ({ node, selecting, onToggleSelect }) => {
+const Bookmark = ({ bookmark, selecting, onToggleSelect }) => {
     const [preview, setPreview] = useState(null);
     const [open, setOpen] = useState(false);
 
@@ -25,8 +25,8 @@ const Bookmark = ({ node, selecting, onToggleSelect }) => {
           const parser = new DOMParser();
           const doc = parser.parseFromString(html, 'text/html');
   
-          const ogTitle = doc.querySelector('meta[property="og:title"]')?.content || node.title;
-          const ogDescription = doc.querySelector('meta[property="og:description"]')?.content || node.url;
+          const ogTitle = doc.querySelector('meta[property="og:title"]')?.content || bookmark.title;
+          const ogDescription = doc.querySelector('meta[property="og:description"]')?.content || bookmark.url;
           const ogImage = doc.querySelector('meta[property="og:image"]')?.content || '';
   
           setPreview({
@@ -41,19 +41,19 @@ const Bookmark = ({ node, selecting, onToggleSelect }) => {
 
   const handleTooltipOpen = () => {
     if( preview == null ){
-      fetchSitePreview(node.url);
+      fetchSitePreview(bookmark.url);
     }
     setOpen(true);
   }
     
   return (
-    <a href={node.url} className="bookmark" key={node.title}>
+    <a href={bookmark.url} className="bookmark" key={bookmark.title}>
       <div className="more">
         {selecting &&
           <Checkbox onChange={onToggleSelect} size="small" sx={{ padding:0 }}/>
         }
       </div>
-      <img src={faviconURL( node.url )} alt={node.title} />
+      <img src={faviconURL( bookmark.url )} alt={bookmark.title}/>
       <Tooltip
         arrow
         disableInteractive
@@ -65,12 +65,12 @@ const Bookmark = ({ node, selecting, onToggleSelect }) => {
         disableTouchListener={false}
         title={
           <>
-            <Typography color="inherit" >{preview ? preview.title :  node.title }</Typography>
+            <Typography color="inherit" >{preview ? preview.title :  bookmark.title }</Typography>
             <p>{preview && preview.description }</p> 
           </>
         }
       >
-        <span className='bookmark-title'>{ node.title }</span>
+        <span className='bookmark-title'>{ bookmark.title }</span>
       </Tooltip>
     </a>
   )

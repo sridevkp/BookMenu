@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BookMenu",
-  "version": "1.0",
+  "version": "2.0",
   "description": "Bookmarks as Apps: Easily accesss favourite sites on new tab",
 
   "permissions": ["bookmarks","favicon"],
