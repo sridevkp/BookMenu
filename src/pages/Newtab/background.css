@@ -29,14 +29,14 @@
     }
 }
 
-.background {
+.fscreen{
     position: fixed;
     width: 100vw;
     height: 100vh;
     z-index: 0;
     top: 0;
     left: 0;
-    background: #3E1E68;
+    /* background: #3E1E68; */
     overflow: hidden;
 }
 

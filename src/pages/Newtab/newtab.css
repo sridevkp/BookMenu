@@ -39,7 +39,7 @@ main {
     margin-top: var(--toolbar-height);
     overflow-y: auto; 
     flex-grow: 1;
-    padding: 3rem;
+    padding: 2rem;
     z-index: 1;
 }
 
@@ -126,6 +126,16 @@ svg{
     -webkit-backdrop-filter: blur( 2px );
     border-radius: 10px;
     border: 1px solid rgba( 255, 255, 255, 0.4 );
+    display: flex;
+    flex-direction: column;
+}
+
+/* Add grid layout for bookmarks inside each blueglass container */
+.folder-bookmarks, .container.blueglass #bookmarks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
 }
 
 .title {
@@ -133,4 +143,36 @@ svg{
     font-weight: bold;
     color: white;
     margin-bottom: 2rem;
+}
+
+.bookmark-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.folder-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: #ffffff63;
+    padding: .5rem 1rem 0 1rem;
+}
+
+.folder-container {
+    min-height: 0;
+    display: block;
+    width: 100%;
+    margin-bottom: 24px;
+    break-inside: avoid;
+}
+
+.masonry-folders {
+    column-count: 2;
+    column-gap: 2rem;
+    width: 100%;
+}
+
+@media (max-width: 700px) {
+    .masonry-folders {
+        column-count: 1;
+    }
 }
