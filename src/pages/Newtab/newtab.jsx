@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Fuse from 'fuse.js'
 
 import ConfirmDialog from '../../components/ConfirmDialog';
-import Bookmark from '../../components/Bookmark';
+import SearchResults from './SearchResults';
 
 import ToggleButton from '@mui/material/ToggleButton';
 import Typography from '@mui/material/Typography';
@@ -17,6 +17,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 
 import './background.css';
 import './newtab.css';
+import FolderContainer from './FolderContainer';
 
 const Newtab = () => {
   const [bookmarks, setBookmarks] = useState([]);
@@ -30,6 +31,9 @@ const Newtab = () => {
 
   const anchorRef = useRef();
   const fuseRef = useRef();
+
+  // Track drag state
+  const [draggedBookmark, setDraggedBookmark] = useState(null);
 
   // Helper to build folders from bookmark tree
   const addBookmarks = useCallback((bookmarkNodes, parentTitle = "Other Bookmarks", parentId = "root", foldersAcc = {}) => {
@@ -128,9 +132,51 @@ const Newtab = () => {
     }
   };
 
+  // Handle drag start on a bookmark
+  const handleDragStart = (bookmark) => {
+    setDraggedBookmark(bookmark);
+  };
+
+  // Handle drag over on a folder container
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  // Handle drop on a folder container
+  const handleDrop = async (folderId) => {
+    if (!draggedBookmark || !folderId) return;
+    // Move the bookmark in Chrome
+    await new Promise(resolve =>
+      chrome.bookmarks.move(draggedBookmark.id, { parentId: folderId }, resolve)
+    );
+    // Remove from old folder and add to new folder in state
+    setFolders(prevFolders => {
+      const newFolders = { ...prevFolders };
+      // Remove from all folders
+      Object.keys(newFolders).forEach(fid => {
+        newFolders[fid].bookmarks = newFolders[fid].bookmarks.filter(
+          b => b.id !== draggedBookmark.id
+        );
+        if (newFolders[fid].bookmarks.length === 0) {
+          delete newFolders[fid];
+        }
+      });
+      // Add to new folder
+      if (!newFolders[folderId]) {
+        newFolders[folderId] = { title: (draggedBookmark.parentTitle || "Other Bookmarks"), bookmarks: [] };
+      }
+      // Update parentId for the bookmark
+      const updatedBookmark = { ...draggedBookmark, parentId: folderId };
+      newFolders[folderId].bookmarks = [...(newFolders[folderId].bookmarks || []), updatedBookmark];
+      return newFolders;
+    });
+    setDraggedBookmark(null);
+  };
+
   return (
     <>
       <div className='fscreen'></div>
+
       <header>
         <nav>
           <div className="img-logo">
@@ -188,43 +234,39 @@ const Newtab = () => {
           </div>
         </nav>
       </header>
+
       <main>
         <div className="title">{searching ? "Search results" : "All Bookmarks"}</div>
         {searching ? (
-          <div className="container blueglass">
-            <div id="bookmarks">
-              { bookmarks.length 
-                ? results.length 
-                  ? results.map(
-                      ({item:bookmark}) => <Bookmark key={bookmark.id} bookmark={bookmark} selecting={selecting} onToggleSelect={ e => e.target.checked ? select(bookmark) : deselect(bookmark) } />
-                    )
-                  : <div className="title">No Results</div>
-                : <div className="title">No Bookmarks</div> 
-              }
-            </div>
-          </div>
+          <SearchResults
+            bookmarks={bookmarks.length}
+            results={results}
+            selecting={selecting}
+            select={select}
+            deselect={deselect}
+          />
         ) : (
           <div className="masonry-folders">
             {Object.entries(folders).map(([folderId, folder]) =>
               folder.bookmarks.length ? (
-                <div
+                <FolderContainer
                   key={folderId}
-                  className="container blueglass folder-container"
-                >
-                  <div className="folder-title">
-                    {folder.title || "Other Bookmarks"}
-                  </div>
-                  <div className="folder-bookmarks">
-                    {folder.bookmarks.map(
-                      (bookmark) => <Bookmark key={bookmark.id} bookmark={bookmark} selecting={selecting} onToggleSelect={ e => e.target.checked ? select(bookmark) : deselect(bookmark) } />
-                    )}
-                  </div>
-                </div>
+                  folderId={folderId}
+                  folder={folder}
+                  selecting={selecting}
+                  select={select}
+                  deselect={deselect}
+                  draggedBookmark={draggedBookmark}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                />
               ) : null
             )}
           </div>
         )}
       </main>
+
       <ConfirmDialog 
         open={openConfirm} 
         onClose={handleCloseConfirm} 
@@ -236,3 +278,4 @@ const Newtab = () => {
 };
 
 export default Newtab;
+               
