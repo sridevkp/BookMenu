@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Fuse from 'fuse.js'
 
 import ConfirmDialog from '../../components/ConfirmDialog';
-import SearchResults from './SearchResults';
+import SearchResults from '../../components/SearchResults';
 
 import ToggleButton from '@mui/material/ToggleButton';
 import Typography from '@mui/material/Typography';
@@ -14,10 +14,12 @@ import ChecklistIcon from '@mui/icons-material/Checklist';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MenuIcon from '@mui/icons-material/Menu';
+import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 
 import './background.css';
 import './newtab.css';
-import FolderContainer from './FolderContainer';
+import FolderContainer from '../../components/FolderContainer';
+import PromptDialog from '../../components/PromptDialog';
 
 const Newtab = () => {
   const [bookmarks, setBookmarks] = useState([]);
@@ -28,6 +30,9 @@ const Newtab = () => {
   const [openMenu, setOpenMenu] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
   const [folders, setFolders] = useState({});
+
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
 
   const anchorRef = useRef();
   const fuseRef = useRef();
@@ -173,6 +178,37 @@ const Newtab = () => {
     setDraggedBookmark(null);
   };
 
+  const handleCreateFolder = () => {
+    setCreatingFolder(true);
+    setOpenMenu(false);
+    setNewFolderName('');
+  };
+
+  const handleCreateFolderSubmit = () => {
+    if (!newFolderName.trim()) return;
+    // Create the new folder under Bookmarks Bar (id: "1")
+    chrome.bookmarks.create({ parentId: "1", title: newFolderName.trim() }, async (newFolder) => {
+      // If bookmarks are selected, move them to the new folder
+      if (selected.size > 0 && newFolder && newFolder.id) {
+        await Promise.all(
+          Array.from(selected).map(b =>
+            new Promise(resolve =>
+              chrome.bookmarks.move(b.id, { parentId: newFolder.id }, resolve)
+            )
+          )
+        );
+        setSelected(new Set());
+      }
+      setCreatingFolder(false);
+      setNewFolderName('');
+      // Refresh folders
+      chrome.bookmarks.getTree((bookmarkTreeNodes) => {
+        setFolders(addBookmarks(bookmarkTreeNodes));
+      });
+    });
+    
+  };
+
   return (
     <>
       <div className='fscreen'></div>
@@ -216,7 +252,18 @@ const Newtab = () => {
               }}
               sx={{marginTop:1,minWidth:180}}
             >
-              <MenuItem onClick={handleDelete} sx={{padding:1,minWidth:180}}>
+              <MenuItem
+                onClick={handleCreateFolder}
+                sx={{padding:1,minWidth:180}}
+              >
+                <CreateNewFolderIcon/>
+                <Typography sx={{ml:2}} variant="inherit">New Folder</Typography>
+              </MenuItem>
+              <MenuItem
+                onClick={handleDelete}
+                sx={{padding:1,minWidth:180}}
+                disabled={selected.size === 0}
+              >
                 <DeleteIcon/> 
                 <Typography sx={{ml:2}} variant="inherit">Delete {`  (${selected.size})`}</Typography>
               </MenuItem>
@@ -248,7 +295,6 @@ const Newtab = () => {
         ) : (
           <div className="masonry-folders">
             {Object.entries(folders).map(([folderId, folder]) =>
-              folder.bookmarks.length ? (
                 <FolderContainer
                   key={folderId}
                   folderId={folderId}
@@ -261,7 +307,6 @@ const Newtab = () => {
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
                 />
-              ) : null
             )}
           </div>
         )}
@@ -273,9 +318,19 @@ const Newtab = () => {
         onConfirmed={deleteBookmarks} 
         size={selected.size}
       />
+
+      <PromptDialog
+        open={creatingFolder}
+        onClose={() => setCreatingFolder(false)}
+        title="Create New Folder"
+        onConfirm={handleCreateFolderSubmit}
+        onCancel={() => setCreatingFolder(false)}
+        value={newFolderName}
+        onChange={val => setNewFolderName(val)}
+      />
     </>
   );
 };
 
 export default Newtab;
-               
+

@@ -1,5 +1,5 @@
 import React from 'react';
-import Bookmark from '../../components/Bookmark';
+import Bookmark from './Bookmark';
 
 const FolderContainer = ({
   folderId,
